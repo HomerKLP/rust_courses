@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct Telemetry {
     pub point: Point,
     pub time_stamp: u64,
@@ -10,7 +10,7 @@ impl Telemetry {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct Point {
     pub latitude: f64,
     pub longitude: f64,
@@ -22,13 +22,11 @@ impl Point {
     }
 }
 
-#[derive(Debug, PartialEq, Copy, Clone)]
+#[derive(Debug, PartialEq)]
 pub struct ListNode {
     pub val: Telemetry,
     pub next: Option<Box<ListNode>>,
 }
-
-impl <ListNode> Copy for Box<ListNode> where ListNode: Copy {}
 
 impl ListNode {
     #[inline]
@@ -43,11 +41,21 @@ impl ListNode {
 
     // method should return part of path between two time points
     pub fn get_part(self, from: u64, to: u64) -> Option<ListNode> {
-        if self.val.time_stamp > from {
-            Some(self)
-        } else {
-            None
+        println!("{:#?}", self);
+        let mut initial_list_node = None;
+        let mut current_list_node = self;
+
+        loop {
+            if to >= current_list_node.val.time_stamp {
+                initial_list_node = Some(current_list_node);
+            }
+            if current_list_node.next.is_none() || from <= current_list_node.val.time_stamp{
+                break;
+            }
+            current_list_node = current_list_node.with_next(ListNode{next: current_list_node.next, ..current_list_node});
         }
+        println!("{:#?}", initial_list_node);
+        initial_list_node
     }
 }
 
@@ -97,9 +105,6 @@ mod test {
         
         let sublist = list.get_part(100, 1000);
         assert!(sublist.is_some());
-
-        println!("{:#?}", list);
-        return;
 
         let sublist = sublist.unwrap();
         assert_eq!(sublist.val.time_stamp, 1000);
